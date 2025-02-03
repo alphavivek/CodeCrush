@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const validator = require('validator');
 
 const userSchema = new mongoose.Schema(
     {
@@ -17,12 +18,22 @@ const userSchema = new mongoose.Schema(
             index: true,
             unique: true,
             lowercase: true,
-            trim: true
+            trim: true,
+            validate(value){
+                if(!validator.isEmail(value)){
+                    throw new Error("InValid Email address: " + value);
+                }
+            },
         },
         password: {
             type: String,
             required: true,
-            trim: true
+            trim: true,
+            validate(value){
+                if(!validator.isStrongPassword(value)){
+                    throw new Error("Enter a strong password: " + value);
+                }
+            },
         },
         age: {
             type: Number,
@@ -40,7 +51,12 @@ const userSchema = new mongoose.Schema(
         },
         photoUrl: {
             type: String,
-            default: "https://www.pngall.com/wp-content/uploads/5/Profile-Male-Transparent.png"
+            default: "https://www.pngall.com/wp-content/uploads/5/Profile-Male-Transparent.png",
+            validate(value){
+                if(!validator.isURL(value)){
+                    throw new Error("Invalid Photo URL : " + value);
+                }
+            },
         },
         about: {
             type: String,
