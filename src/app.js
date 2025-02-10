@@ -3,11 +3,14 @@ const { userauth, adminauth } = require("./middlewares/auth");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
+const cookieparser = require("cookie-parser")
+const jwt = require("jsonwebtoken");
 const { validateSignUpData } = require("./utils/Validation");
 const app = express();
 const PORT = 3000;
 
 app.use(express.json()); // Middleware
+app.use(cookieparser());
 
 app.post("/signup", async (req, res) => {
     // Creating a new Instance of the User model
@@ -56,6 +59,11 @@ app.post("/login", async (req, res) => {
 
         const isUserPassword = await bcrypt.compare(password, user.password);
         if (isUserPassword) {
+            // Create a JWT Token 
+            const token = await jwt.sign({ _id : user._id }, "CODE@CRUSH$1579");   // jwt.sign({HEADER}, "PRIVATE KEY")
+            
+            // Add the token to cookie and send the response back to the user 
+            res.cookie("token", token);
             res.send("Login Successful!!")
         }
         else {
@@ -66,6 +74,28 @@ app.post("/login", async (req, res) => {
     }
 });
 
+
+app.get("/profile", async (req,res) => {
+    try{
+        const cookies = req.cookies;
+        const { token } = cookies;
+        if(!token){
+            throw new Error("Invalid Token");
+        }
+    
+        // Validate my token
+        const decodedMessage = await jwt.verify(token , "CODE@CRUSH$1579");
+        // console.log(decodedMessage._id);
+
+        const user = await User.findById(decodedMessage._id);
+        if(!user){
+            throw new Error("User does not exist");
+        }
+        res.send(user);
+    }catch(err){
+        res.status(400).send("ERROR : " + err.message);
+    }
+});
 
 app.get("/user", async (req, res) => {
     const useremailId = req.body.emailId;
