@@ -4,7 +4,6 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
 const cookieparser = require("cookie-parser")
-const jwt = require("jsonwebtoken");
 const { validateSignUpData } = require("./utils/Validation");
 const app = express();
 const PORT = 3000;
@@ -57,13 +56,15 @@ app.post("/login", async (req, res) => {
             throw new Error("Invalid Credentials");
         }
 
-        const isUserPassword = await bcrypt.compare(password, user.password);
+        const isUserPassword = await user.validatePassword(password);
         if (isUserPassword) {
             // Create a JWT Token 
-            const token = await jwt.sign({ _id : user._id }, "CODE@CRUSH$1579");   // jwt.sign({HEADER}, "PRIVATE KEY")
+            const token = await user.getJWT();
             
             // Add the token to cookie and send the response back to the user 
-            res.cookie("token", token);
+            res.cookie("token", token, {
+                expires: new Date(Date.now() + 8 * 3600000) // cookie will be removed after 8 hours
+              });
             res.send("Login Successful!!")
         }
         else {
@@ -75,22 +76,9 @@ app.post("/login", async (req, res) => {
 });
 
 
-app.get("/profile", async (req,res) => {
+app.get("/profile", userauth, async (req,res) => {
     try{
-        const cookies = req.cookies;
-        const { token } = cookies;
-        if(!token){
-            throw new Error("Invalid Token");
-        }
-    
-        // Validate my token
-        const decodedMessage = await jwt.verify(token , "CODE@CRUSH$1579");
-        // console.log(decodedMessage._id);
-
-        const user = await User.findById(decodedMessage._id);
-        if(!user){
-            throw new Error("User does not exist");
-        }
+        const user = req.user;
         res.send(user);
     }catch(err){
         res.status(400).send("ERROR : " + err.message);
