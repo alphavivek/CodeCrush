@@ -8,11 +8,13 @@ const userSchema = new mongoose.Schema(
         firstName: {
             type: String,
             required: true,
-            minLength: 3
+            minLength: 3,
+            maxLength: 20
         },
         lastName: {
             type: String,
-            minLength : 3
+            minLength : 3,
+            maxLength: 20
         },
         emailId: {
             type: String,
@@ -45,11 +47,15 @@ const userSchema = new mongoose.Schema(
             type: String,
             lowercase: true,
             trim: true,
-            validate(value) {
-                if (!["male", "female", "others"].includes(value)) {
-                    throw new Error("Gender data is not valid");
-                }
+            enum : {
+                values : ["male","female","other"],
+                message : `{VALUE} is not a valid gender type`,
             },
+            // validate(value) {
+            //     if (!["male", "female", "others"].includes(value)) {
+            //         throw new Error("Gender data is not valid");
+            //     }
+            // },
         },
         photoUrl: {
             type: String,
@@ -67,7 +73,12 @@ const userSchema = new mongoose.Schema(
         },
         skills: {
             type: [String],
-            trim : true
+            trim : true,
+            validate(value){
+                if(value.length > 5) {
+                    throw new Error("You can't store more than 5 skills!")
+                }
+            }
         }
     },
     {
@@ -90,6 +101,8 @@ userSchema.methods.validatePassword = async function(passwordInputByUser) {
     return isPasswordValid;
 }
 
+
+// Model(User) is always starts with Capital Letter.
 const User = mongoose.model("User", userSchema);
 
 module.exports = User;
