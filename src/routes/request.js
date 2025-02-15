@@ -52,7 +52,7 @@ requestRouter.post("/request/send/:status/:userId", userauth, async (req, res) =
 
 requestRouter.post("/request/review/:status/:requestId", userauth, async (req, res) => {
     try {
-        const loggenInUser = req.user;
+        const loggedInUser = req.user;
         const { status, requestId } = req.params;
 
         const allowedStatus = ["accepted", "rejected"];
@@ -61,8 +61,8 @@ requestRouter.post("/request/review/:status/:requestId", userauth, async (req, r
         }
 
         const connectionRequest = await ConnectionRequestModel.findOne({
-            _id: requestId,
-            toUserId: loggenInUser._id,
+            fromUserId : requestId,
+            toUserId: loggedInUser._id,
             status: "interested",
         })
 
