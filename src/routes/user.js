@@ -54,7 +54,7 @@ userRouter.get("/user/connections", userauth, async (req, res) => {
     }
 });
 
-userRouter.get("/user/feed", userauth, async (req, res) => {
+userRouter.get("/feed", userauth, async (req, res) => {
     try {
         const loggedInUser = req.user;
 
